@@ -26,7 +26,7 @@ export function Navbar({ ues }: NavbarProps) {
       <div className="max-w-4xl mx-auto px-4">
         <div className="py-2">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-semibold text-gray-900">Grade Calculator: L3(CE)</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Calculator: L3S1(CE)</h1>
             <div className="text-sm text-gray-500">
               {completedAssessments}/{totalAssessments} completed
             </div>
