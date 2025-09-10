@@ -9,7 +9,7 @@ function roundTo(value: number, decimals: number): number {
 }
 
 /**
- * Calculate EC grade (scaled integer math)
+ * Calculate EC grade (still out of 20 here, but weighted by coef directly)
  */
 export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): number | null {
   const assessments = treatEmptyAsZero
@@ -22,19 +22,17 @@ export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): num
   let totalWeight = 0;
 
   for (const a of assessments) {
-    const grade = a.grade ?? 0;
-    // scale grade to avoid floating drift
-    const scaled = Math.round(grade * 100000); // keep 5 decimals as int
-    weightedSum += scaled * a.coef;
+    const grade = a.grade ?? 0; // always /20
+    weightedSum += grade * a.coef;
     totalWeight += a.coef;
   }
 
   if (totalWeight === 0) return null;
-  return weightedSum / (totalWeight * 100000); // only divide once
+  return weightedSum / totalWeight; // still /20
 }
 
 /**
- * Calculate UE grade
+ * Calculate UE grade (still /20)
  */
 export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): number | null {
   const ecsWithGrades = ue.ecs
@@ -50,23 +48,25 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
   let totalWeight = 0;
 
   for (const ec of ecsWithGrades) {
-    const scaled = Math.round((ec.grade as number) * 100000);
-    weightedSum += scaled * ec.coef;
+    weightedSum += (ec.grade as number) * ec.coef;
     totalWeight += ec.coef;
   }
 
   if (totalWeight === 0) return null;
-  return weightedSum / (totalWeight * 100000);
+  return weightedSum / totalWeight; // still /20
 }
 
 /**
- * Calculate overall grade
+ * Calculate overall projected grade
+ * - Step 1: compute weighted average (out of 20) but using coef/ECTS weights
+ * - Step 2: normalize to /30
+ * - Step 3: scale final result to /20
  */
 export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   const uesWithGrades = ues
     .map(ue => ({
       grade: calculateUEGrade(ue, treatEmptyAsZero),
-      coef: ue.coef
+      coef: ue.coef // this is ECTS
     }))
     .filter(ue => ue.grade !== null);
 
@@ -76,15 +76,20 @@ export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = fal
   let totalWeight = 0;
 
   for (const ue of uesWithGrades) {
-    const scaled = Math.round((ue.grade as number) * 100000);
-    weightedSum += scaled * ue.coef;
-    totalWeight += ue.coef;
+    weightedSum += (ue.grade as number) * ue.coef; // grade (/20) × ECTS
+    totalWeight += ue.coef; // total ECTS
   }
 
   if (totalWeight === 0) return null;
 
-  const finalGrade = weightedSum / (totalWeight * 100000);
-  return roundTo(finalGrade, 5); // ✅ only round once here
+  // Step 1: average on /20 scale
+  const avg20 = weightedSum / totalWeight;
+
+  // Step 2: normalize ECTS to 30 and then project to /20
+  // Equivalent to: (sum(grade*ECTS) / 30)
+  const projected = (weightedSum / 30);
+
+  return roundTo(projected, 5);
 }
 
 /**
