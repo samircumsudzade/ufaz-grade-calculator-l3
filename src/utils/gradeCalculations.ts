@@ -10,6 +10,7 @@ function roundTo(value: number, decimals: number): number {
 
 /**
  * Calculate EC grade (weighted average of assessments)
+ * Preserves precision using integers
  */
 export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): number | null {
   const assessments = treatEmptyAsZero
@@ -18,21 +19,22 @@ export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): num
 
   if (assessments.length === 0) return null;
 
+  const factor = 100000; // precision factor
   let weightedSum = 0;
-  let totalWeight = 0;
+  let totalCoef = 0;
 
   for (const a of assessments) {
     const grade = a.grade ?? 0;
-    weightedSum += grade * a.coef;
-    totalWeight += a.coef;
+    weightedSum += Math.round(grade * factor) * a.coef;
+    totalCoef += a.coef;
   }
 
-  if (totalWeight === 0) return null;
-  return weightedSum / totalWeight;
+  return weightedSum / totalCoef / factor;
 }
 
 /**
  * Calculate UE grade (weighted average of ECs)
+ * Preserves precision using integers
  */
 export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): number | null {
   const ecsWithGrades = ue.ecs
@@ -40,58 +42,62 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
       grade: calculateECGrade(ec, treatEmptyAsZero),
       coef: ec.coef
     }))
-    .filter(ec => ec.grade !== null);
+    .filter(ec => ec.grade !== null) as { grade: number; coef: number }[];
 
   if (ecsWithGrades.length === 0) return null;
 
-  const totalCoef = ecsWithGrades.reduce((sum, ec) => sum + ec.coef, 0);
-  const weightedSum = ecsWithGrades.reduce((sum, ec) => sum + (ec.grade as number) * ec.coef, 0);
+  const factor = 100000; // precision factor
+  let weightedSum = 0;
+  let totalCoef = 0;
 
-  return weightedSum / totalCoef;
+  for (const ec of ecsWithGrades) {
+    weightedSum += Math.round(ec.grade * factor) * ec.coef;
+    totalCoef += ec.coef;
+  }
+
+  return weightedSum / totalCoef / factor;
 }
 
 /**
  * Current overall grade (mid-progress)
- * - uses only graded UEs
+ * - only graded UEs
  * - denominator = sum of graded UEs’ ECTS
  */
 export function calculateOverallCurrentGrade(ues: UE[]): number | null {
   const gradedUEs = ues
-    .map(ue => ({
-      grade: calculateUEGrade(ue, false),
-      ects: ue.coef
-    }))
-    .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
+    .map(ue => {
+      const grade = calculateUEGrade(ue, false);
+      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
+    })
+    .filter(Boolean) as { grade: number; ects: number }[];
 
   if (gradedUEs.length === 0) return null;
 
-  const totalECTS = gradedUEs.reduce((sum, ue) => sum + ue.ects, 0);
   const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
+  const totalECTS = gradedUEs.reduce((sum, ue) => sum + ue.ects, 0);
 
-  return roundTo(weightedSum / totalECTS, 5);
+  return roundTo(weightedSum / totalECTS / 100000, 5);
 }
 
 /**
  * Mid-progress projected grade (/20)
- * - uses weighted sum of graded UEs
- * - denominator = total ECTS (30)
+ * - weighted sum of graded UEs
+ * - denominator = total system ECTS (30)
  */
 export function calculateOverallMidProgressProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   const gradedUEs = ues
-    .map(ue => ({
-      grade: calculateUEGrade(ue, treatEmptyAsZero),
-      ects: ue.coef
-    }))
-    .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
+    .map(ue => {
+      const grade = calculateUEGrade(ue, treatEmptyAsZero);
+      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
+    })
+    .filter(Boolean) as { grade: number; ects: number }[];
 
   if (gradedUEs.length === 0) return null;
 
   const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
 
-  // Divide by 30 (full system ECTS), like Excel
-  const projectedGrade = weightedSum / 30;
-
-  return roundTo(projectedGrade, 5);
+  // Always divide by full system ECTS (30)
+  return roundTo(weightedSum / (30 * 100000), 5);
 }
 
 /**
@@ -99,18 +105,18 @@ export function calculateOverallMidProgressProjectedGrade(ues: UE[], treatEmptyA
  */
 export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   const uesWithGrades = ues
-    .map(ue => ({
-      grade: calculateUEGrade(ue, treatEmptyAsZero),
-      ects: ue.coef
-    }))
-    .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
+    .map(ue => {
+      const grade = calculateUEGrade(ue, treatEmptyAsZero);
+      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
+    })
+    .filter(Boolean) as { grade: number; ects: number }[];
 
   if (uesWithGrades.length === 0) return null;
 
-  const totalECTS = uesWithGrades.reduce((sum, ue) => sum + ue.ects, 0);
   const weightedSum = uesWithGrades.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
+  const totalECTS = uesWithGrades.reduce((sum, ue) => sum + ue.ects, 0);
 
-  return roundTo(weightedSum / totalECTS, 5);
+  return roundTo(weightedSum / (totalECTS * 100000), 5);
 }
 
 /**
