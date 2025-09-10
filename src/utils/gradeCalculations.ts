@@ -94,6 +94,18 @@ export function calculateUEGrade(ue: UE, useProjection: boolean = false): number
  * For projected grade: use all UEs with projection
  */
 export function calculateOverallGrade(ues: UE[], useProjection: boolean = false): number | null {
+  // Check if there's any grade data at all
+  const hasAnyGrades = ues.some(ue => 
+    ue.ecs.some(ec => 
+      ec.assessments.some(assessment => assessment.grade !== undefined)
+    )
+  );
+  
+  // If no grades at all and asking for projection, return null
+  if (!hasAnyGrades && useProjection) {
+    return null;
+  }
+
   if (useProjection) {
     // For projection: use all UEs
     let weightedSum = 0;
@@ -102,7 +114,15 @@ export function calculateOverallGrade(ues: UE[], useProjection: boolean = false)
     for (const ue of ues) {
       let ueGrade = calculateUEGrade(ue, false); // Try current grade first
       if (ueGrade === null) {
-        ueGrade = calculateUEGrade(ue, true); // If no current grade, use projection
+        // Only use projection if this UE has some assessment data
+        const hasUEData = ue.ecs.some(ec => 
+          ec.assessments.some(assessment => assessment.grade !== undefined)
+        );
+        if (hasUEData) {
+          ueGrade = calculateUEGrade(ue, true); // Use projection for partial data
+        } else {
+          ueGrade = 10; // Assume 10/20 for completely empty UEs only when other UEs have data
+        }
       }
       if (ueGrade === null) {
         ueGrade = 10; // Fallback to 10/20
