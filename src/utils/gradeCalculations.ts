@@ -57,7 +57,9 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
 }
 
 /**
- * Calculate current grade (mid-progress) — only considers graded UEs
+ * Current overall grade (mid-progress)
+ * - uses only graded UEs
+ * - denominator = sum of graded UEs’ ECTS
  */
 export function calculateOverallCurrentGrade(ues: UE[]): number | null {
   const gradedUEs = ues
@@ -76,7 +78,32 @@ export function calculateOverallCurrentGrade(ues: UE[]): number | null {
 }
 
 /**
- * Calculate overall projected grade — assumes all grades entered, full ECTS
+ * Mid-progress projected grade (/20)
+ * - uses weighted sum of graded UEs
+ * - denominator = full ECTS (30)
+ */
+export function calculateOverallMidProgressProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
+  const gradedUEs = ues
+    .map(ue => ({
+      grade: calculateUEGrade(ue, treatEmptyAsZero),
+      ects: ue.coef
+    }))
+    .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
+
+  if (gradedUEs.length === 0) return null;
+
+  const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
+
+  // Always divide by 30 (full total ECTS)
+  const projectedGrade = weightedSum / 30;
+
+  return roundTo(projectedGrade, 5);
+}
+
+/**
+ * Overall projected grade (/20)
+ * - assumes all UEs graded
+ * - denominator = sum of all UEs’ ECTS
  */
 export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   const uesWithGrades = ues
@@ -95,7 +122,7 @@ export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: bool
 }
 
 /**
- * Calculate final overall grade — same as projected when all grades entered
+ * Final overall grade — same as projected when all grades entered
  */
 export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   return calculateOverallProjectedGrade(ues, treatEmptyAsZero);
