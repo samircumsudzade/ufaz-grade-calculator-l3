@@ -10,7 +10,6 @@ function roundTo(value: number, decimals: number): number {
 
 /**
  * Calculate EC grade (weighted average of assessments)
- * Preserves precision using integers
  */
 export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): number | null {
   const assessments = treatEmptyAsZero
@@ -19,22 +18,14 @@ export function calculateECGrade(ec: EC, treatEmptyAsZero: boolean = false): num
 
   if (assessments.length === 0) return null;
 
-  const factor = 100000; // precision factor
-  let weightedSum = 0;
-  let totalCoef = 0;
+  const weightedSum = assessments.reduce((sum, a) => sum + (a.grade ?? 0) * a.coef, 0);
+  const totalCoef = assessments.reduce((sum, a) => sum + a.coef, 0);
 
-  for (const a of assessments) {
-    const grade = a.grade ?? 0;
-    weightedSum += Math.round(grade * factor) * a.coef;
-    totalCoef += a.coef;
-  }
-
-  return weightedSum / totalCoef / factor;
+  return totalCoef === 0 ? null : weightedSum / totalCoef;
 }
 
 /**
  * Calculate UE grade (weighted average of ECs)
- * Preserves precision using integers
  */
 export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): number | null {
   const ecsWithGrades = ue.ecs
@@ -46,37 +37,10 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
 
   if (ecsWithGrades.length === 0) return null;
 
-  const factor = 100000; // precision factor
-  let weightedSum = 0;
-  let totalCoef = 0;
+  const weightedSum = ecsWithGrades.reduce((sum, ec) => sum + ec.grade * ec.coef, 0);
+  const totalCoef = ecsWithGrades.reduce((sum, ec) => sum + ec.coef, 0);
 
-  for (const ec of ecsWithGrades) {
-    weightedSum += Math.round(ec.grade * factor) * ec.coef;
-    totalCoef += ec.coef;
-  }
-
-  return weightedSum / totalCoef / factor;
-}
-
-/**
- * Current overall grade (mid-progress)
- * - only graded UEs
- * - denominator = sum of graded UEs’ ECTS
- */
-export function calculateOverallCurrentGrade(ues: UE[]): number | null {
-  const gradedUEs = ues
-    .map(ue => {
-      const grade = calculateUEGrade(ue, false);
-      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
-    })
-    .filter(Boolean) as { grade: number; ects: number }[];
-
-  if (gradedUEs.length === 0) return null;
-
-  const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
-  const totalECTS = gradedUEs.reduce((sum, ue) => sum + ue.ects, 0);
-
-  return roundTo(weightedSum / totalECTS / 100000, 5);
+  return totalCoef === 0 ? null : weightedSum / totalCoef;
 }
 
 /**
@@ -84,11 +48,11 @@ export function calculateOverallCurrentGrade(ues: UE[]): number | null {
  * - weighted sum of graded UEs
  * - denominator = total system ECTS (30)
  */
-export function calculateOverallMidProgressProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
+export function calculateOverallMidProgressProjectedGrade(ues: UE[], totalECTS = 30, treatEmptyAsZero: boolean = false): number | null {
   const gradedUEs = ues
     .map(ue => {
       const grade = calculateUEGrade(ue, treatEmptyAsZero);
-      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
+      return grade !== null ? { grade, ects: ue.coef } : null;
     })
     .filter(Boolean) as { grade: number; ects: number }[];
 
@@ -96,8 +60,7 @@ export function calculateOverallMidProgressProjectedGrade(ues: UE[], treatEmptyA
 
   const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
 
-  // Always divide by full system ECTS (30)
-  return roundTo(weightedSum / (30 * 100000), 5);
+  return roundTo(weightedSum / (totalECTS * 100000), 5);
 }
 
 /**
@@ -107,7 +70,7 @@ export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: bool
   const uesWithGrades = ues
     .map(ue => {
       const grade = calculateUEGrade(ue, treatEmptyAsZero);
-      return grade !== null ? { grade: Math.round(grade * 100000), ects: ue.coef } : null;
+      return grade !== null ? { grade, ects: ue.coef } : null;
     })
     .filter(Boolean) as { grade: number; ects: number }[];
 
