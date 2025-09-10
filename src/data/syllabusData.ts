@@ -8,7 +8,7 @@ export const syllabusData: SyllabusData = [
     "ecs": [
       {
         "name": "Ordinary and partial differential equations",
-        "coef": 1,
+        "coef": 4,
         "assessments": [
           { "label": "First written exam", "coef": 1, "duration": "1h30" },
           { "label": "Second written exam", "coef": 1, "duration": "1h30" },
