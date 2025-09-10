@@ -43,7 +43,9 @@ export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = fal
     }));
     const totalWeight = uesWithGrades.reduce((sum, ue) => sum + ue.coef, 0);
     const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade * ue.coef), 0);
-    return weightedSum / totalWeight;
+    const finalGrade = weightedSum / totalWeight;
+    // Round the final projected grade to 5 decimal places
+    return Math.round(finalGrade * 100000) / 100000;
   } else {
     const uesWithGrades = ues.map(ue => ({
       ...ue,
@@ -52,11 +54,14 @@ export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = fal
     if (uesWithGrades.length === 0) return null;
     const totalWeight = uesWithGrades.reduce((sum, ue) => sum + ue.coef, 0);
     const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade! * ue.coef), 0);
-    return weightedSum / totalWeight;
+    const finalGrade = weightedSum / totalWeight;
+    // Round the final current grade to 5 decimal places
+    return Math.round(finalGrade * 100000) / 100000;
   }
 }
 
 export function formatGrade(grade: number | null): string {
   if (grade === null) return 'N/A';
-  return grade.toFixed(2);
+  // Display with up to 5 decimal places, removing trailing zeros
+  return parseFloat(grade.toFixed(5)).toString();
 }
