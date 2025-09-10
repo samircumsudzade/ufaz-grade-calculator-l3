@@ -1,7 +1,7 @@
 import { UE, EC } from '../types/syllabus';
 
 /**
- * Round safely at the end
+ * Round safely to a specific number of decimals
  */
 function roundTo(value: number, decimals: number): number {
   const factor = Math.pow(10, decimals);
@@ -57,33 +57,26 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
 }
 
 /**
- * Calculate overall current grade (/20)
+ * Calculate current grade (mid-progress) — only considers graded UEs
  */
-export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
-  const uesWithGrades = ues
+export function calculateOverallCurrentGrade(ues: UE[]): number | null {
+  const gradedUEs = ues
     .map(ue => ({
-      grade: calculateUEGrade(ue, treatEmptyAsZero),
-      coef: ue.coef
+      grade: calculateUEGrade(ue, false),
+      ects: ue.coef
     }))
-    .filter(ue => ue.grade !== null);
+    .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
 
-  if (uesWithGrades.length === 0) return null;
+  if (gradedUEs.length === 0) return null;
 
-  let weightedSum = 0;
-  let totalWeight = 0;
+  const totalECTS = gradedUEs.reduce((sum, ue) => sum + ue.ects, 0);
+  const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
 
-  for (const ue of uesWithGrades) {
-    weightedSum += (ue.grade as number) * ue.coef;
-    totalWeight += ue.coef;
-  }
-
-  if (totalWeight === 0) return null;
-  const finalGrade = weightedSum / totalWeight;
-  return roundTo(finalGrade, 5);
+  return roundTo(weightedSum / totalECTS, 5);
 }
 
 /**
- * Calculate overall projected grade (/20), correctly weighted by total ECTS
+ * Calculate overall projected grade — assumes all grades entered, full ECTS
  */
 export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
   const uesWithGrades = ues
@@ -96,16 +89,20 @@ export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero: bool
   if (uesWithGrades.length === 0) return null;
 
   const totalECTS = uesWithGrades.reduce((sum, ue) => sum + ue.ects, 0);
-  if (totalECTS === 0) return null;
-
   const weightedSum = uesWithGrades.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
 
-  const projectedGrade = weightedSum / totalECTS;
-  return roundTo(projectedGrade, 5);
+  return roundTo(weightedSum / totalECTS, 5);
 }
 
 /**
- * Format grade for display: up to 5 decimals, no trailing zeros
+ * Calculate final overall grade — same as projected when all grades entered
+ */
+export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
+  return calculateOverallProjectedGrade(ues, treatEmptyAsZero);
+}
+
+/**
+ * Format grade for display: up to 5 decimals, removes trailing zeros
  */
 export function formatGrade(grade: number | null): string {
   if (grade === null) return 'N/A';
