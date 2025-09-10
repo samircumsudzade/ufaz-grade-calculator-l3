@@ -42,6 +42,7 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero = false): number | nul
 
 /**
  * Current overall grade (mid-progress) weighted by graded UEs ECTS only
+ * Returns the mean grade over graded UEs, weighted by their ECTS, out of 20
  */
 export function calculateOverallCurrentGrade(ues: UE[]): number | null {
   const gradedUEs = ues
@@ -58,27 +59,29 @@ export function calculateOverallCurrentGrade(ues: UE[]): number | null {
 
 /**
  * Mid-progress projected grade (/20)
- * Only UE ECTS is used for scaling
+ * Scales the sum of graded UEs using their ECTS over total system ECTS (e.g. 30)
+ * This projects the grade as if the rest are zeros
  */
 export function calculateOverallMidProgressProjectedGrade(ues: UE[], totalECTS = 30): number | null {
   if (ues.length === 0) return null;
 
-  let projectedSum = 0;
+  // Only include UEs with at least one graded EC
+  const gradedUEs = ues
+    .map(ue => ({
+      grade: calculateUEGrade(ue, false),
+      ects: ue.coef
+    }))
+    .filter(ue => ue.grade !== null) as { grade: number, ects: number }[];
 
-  for (const ue of ues) {
-    const gradedECs = ue.ecs.filter(ec => ec.grade !== undefined && ec.grade !== null);
-    if (gradedECs.length === 0) continue;
+  if (gradedUEs.length === 0) return null;
 
-    const totalECsCoef = ue.ecs.reduce((sum, ec) => sum + ec.coef, 0);
-    if (totalECsCoef === 0) continue;
+  // Projected sum: sum(grade * ects) for graded UEs only
+  const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
 
-    const ueGrade = gradedECs.reduce((sum, ec) => sum + (ec.grade ?? 0) * ec.coef, 0) / totalECsCoef;
+  // Scale by total system ECTS and out of 20
+  const projected = (weightedSum / totalECTS);
 
-    // Only scale by UE ECTS / total system ECTS
-    projectedSum += ueGrade * ue.coef / totalECTS;
-  }
-
-  return roundTo(projectedSum, 5);
+  return roundTo(projected, 5);
 }
 
 /**
