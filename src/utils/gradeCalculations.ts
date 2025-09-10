@@ -36,27 +36,45 @@ export function calculateUEGrade(ue: UE, treatEmptyAsZero: boolean = false): num
 }
 
 export function calculateOverallGrade(ues: UE[], treatEmptyAsZero: boolean = false): number | null {
+  const TOTAL_ECTS = 30; // Total ECTS for the semester
+  
   if (treatEmptyAsZero) {
-    const uesWithGrades = ues.map(ue => ({
-      ...ue,
-      calculatedGrade: calculateUEGrade(ue, true) ?? 0
-    }));
-    const totalWeight = uesWithGrades.reduce((sum, ue) => sum + ue.coef, 0);
-    const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade * ue.coef), 0);
-    return weightedSum / totalWeight;
+    // For projected grade: use actual grades where available, assume 10/20 for missing UEs
+    const uesWithGrades = ues.map(ue => {
+      const ueGrade = calculateUEGrade(ue, false); // Don't treat empty as zero at UE level
+      return {
+        ...ue,
+        calculatedGrade: ueGrade !== null ? ueGrade : 10 // Assume 10/20 for UEs with no data
+      };
+    });
+    
+    // Calculate weighted sum based on ECTS
+    const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade * ue.ects), 0);
+    const finalGrade = (weightedSum / TOTAL_ECTS);
+    
+    // Round to 5 decimal places
+    return Math.round(finalGrade * 100000) / 100000;
   } else {
+    // For current grade: only use UEs that have actual data
     const uesWithGrades = ues.map(ue => ({
       ...ue,
       calculatedGrade: calculateUEGrade(ue, false)
     })).filter(ue => ue.calculatedGrade !== null);
+    
     if (uesWithGrades.length === 0) return null;
-    const totalWeight = uesWithGrades.reduce((sum, ue) => sum + ue.coef, 0);
-    const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade! * ue.coef), 0);
-    return weightedSum / totalWeight;
+    
+    // Calculate weighted sum based on ECTS
+    const weightedSum = uesWithGrades.reduce((sum, ue) => sum + (ue.calculatedGrade! * ue.ects), 0);
+    const totalEcts = uesWithGrades.reduce((sum, ue) => sum + ue.ects, 0);
+    const finalGrade = (weightedSum / totalEcts);
+    
+    // Round to 5 decimal places
+    return Math.round(finalGrade * 100000) / 100000;
   }
 }
 
 export function formatGrade(grade: number | null): string {
   if (grade === null) return 'N/A';
-  return grade.toFixed(2);
+  // Show up to 5 decimal places but remove trailing zeros
+  return parseFloat(grade.toFixed(5)).toString();
 }
