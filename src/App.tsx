@@ -8,6 +8,10 @@ import { UESection } from './components/UESection';
 function App() {
   const [ues, setUes] = useLocalStorage<UE[]>('gradeData', syllabusData);
 
+  const handleReset = () => {
+    setUes(syllabusData);
+  };
+
   const handleAssessmentGradeChange = (
     ueIndex: number, 
     ecIndex: number, 
@@ -37,7 +41,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar ues={ues} />
+      <Navbar ues={ues} onReset={handleReset} />
       
       <div className="pt-24">
         <div className="max-w-4xl mx-auto px-4 py-6">

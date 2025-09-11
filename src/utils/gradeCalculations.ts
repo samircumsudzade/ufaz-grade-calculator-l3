@@ -144,6 +144,6 @@ export function calculateOverallGrade(ues: UE[], treatEmptyAsZero = false): numb
  * Format grade for display
  */
 export function formatGrade(grade: number | null): string {
-  if (grade === null) return 'N/A';
+  if (grade === null) return '0';
   return grade.toString();
 }
