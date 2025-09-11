@@ -9,7 +9,7 @@ interface ECCardProps {
 }
 
 export function ECCard({ ec, onAssessmentGradeChange }: ECCardProps) {
-  const calculatedGrade = calculateECGrade(ec, false);
+  const calculatedGrade = calculateECGrade(ec);
 
   return (
     <div className="p-4">

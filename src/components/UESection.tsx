@@ -9,7 +9,7 @@ interface UESectionProps {
 }
 
 export function UESection({ ue, onAssessmentGradeChange }: UESectionProps) {
-  const calculatedGrade = calculateUEGrade(ue, false);
+  const calculatedGrade = calculateUEGrade(ue);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
