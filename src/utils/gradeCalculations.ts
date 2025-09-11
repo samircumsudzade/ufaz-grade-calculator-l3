@@ -1,7 +1,7 @@
 import { UE, EC } from '../types/syllabus';
 
 /**
- * Safe rounding to decimals
+ * Safe rounding to decimals - only used at the very end
  */
 function roundTo(value: number, decimals: number): number {
   const factor = Math.pow(10, decimals);
@@ -10,113 +10,134 @@ function roundTo(value: number, decimals: number): number {
 
 /**
  * Calculate EC grade based on assessment coefficients
+ * This is the weighted average of assessments within an EC
  */
 export function calculateECGrade(ec: EC, treatEmptyAsZero = false): number | null {
-  const assessments = treatEmptyAsZero
-    ? ec.assessments
+  const validAssessments = treatEmptyAsZero
+    ? ec.assessments.map(a => ({ ...a, grade: a.grade ?? 0 }))
     : ec.assessments.filter(a => a.grade !== undefined && a.grade !== null);
 
-  if (assessments.length === 0) return null;
+  if (validAssessments.length === 0) return null;
 
-  const totalCoef = assessments.reduce((sum, a) => sum + a.coef, 0);
-  const weightedSum = assessments.reduce((sum, a) => sum + (a.grade ?? 0) * a.coef, 0);
+  const totalCoef = validAssessments.reduce((sum, a) => sum + a.coef, 0);
+  if (totalCoef === 0) return null;
 
-  return totalCoef === 0 ? null : roundTo(weightedSum / totalCoef, 5);
+  const weightedSum = validAssessments.reduce((sum, a) => sum + (a.grade ?? 0) * a.coef, 0);
+  
+  // Return exact calculation without rounding
+  return weightedSum / totalCoef;
 }
 
 /**
- * Calculate UE grade considering ECTS weights
+ * Calculate UE grade as weighted average of EC grades using EC coefficients
+ * UE coefficient is ignored here - only EC coefficients matter for internal UE calculation
  */
 export function calculateUEGrade(ue: UE, treatEmptyAsZero = false): number | null {
-  const ecs = ue.ecs
+  const validECs = ue.ecs
     .map(ec => ({
       grade: calculateECGrade(ec, treatEmptyAsZero),
       coef: ec.coef,
     }))
     .filter(ec => ec.grade !== null) as { grade: number; coef: number }[];
 
-  if (ecs.length === 0) return null;
+  if (validECs.length === 0) return null;
 
-  const totalCoef = ecs.reduce((sum, ec) => sum + ec.coef, 0);
-  const weightedSum = ecs.reduce((sum, ec) => sum + ec.grade * ec.coef, 0);
+  const totalCoef = validECs.reduce((sum, ec) => sum + ec.coef, 0);
+  if (totalCoef === 0) return null;
 
-  return totalCoef === 0 ? null : roundTo(weightedSum / totalCoef, 5);
+  const weightedSum = validECs.reduce((sum, ec) => sum + ec.grade * ec.coef, 0);
+
+  // Return exact calculation without rounding
+  return weightedSum / totalCoef;
 }
 
 /**
- * Calculate current overall grade based on completed ECTS
+ * Calculate current grade based only on completed UEs, weighted by their ECTS
+ * This shows the actual grade for completed work only
  */
 export function calculateOverallCurrentGrade(ues: UE[]): number | null {
-  const gradedUEs = ues
+  const completedUEs = ues
     .map(ue => ({
       grade: calculateUEGrade(ue, false),
-      ects: ue.coef,
+      ects: ue.ects, // Use ECTS, not coefficient
     }))
     .filter(ue => ue.grade !== null) as { grade: number; ects: number }[];
 
-  if (gradedUEs.length === 0) return null;
+  if (completedUEs.length === 0) return null;
 
-  const totalECTS = gradedUEs.reduce((sum, ue) => sum + ue.ects, 0);
-  const weightedSum = gradedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
+  const totalCompletedECTS = completedUEs.reduce((sum, ue) => sum + ue.ects, 0);
+  if (totalCompletedECTS === 0) return null;
 
-  return roundTo(weightedSum / totalECTS, 5);
+  const weightedSum = completedUEs.reduce((sum, ue) => sum + ue.grade * ue.ects, 0);
+
+  // Round only at the end
+  return roundTo(weightedSum / totalCompletedECTS, 5);
 }
 
 /**
- * Calculate projected grade based on ECTS proportion
+ * Calculate projected grade for mid-progress
+ * Each UE is scaled by its ECTS proportion relative to total ECTS
+ * UE coefficients are completely ignored
  */
-export function calculateOverallMidProgressProjectedGrade(ues: UE[], totalECTS = 30): number | null {
-  if (ues.length === 0) return null;
+export function calculateOverallMidProgressProjectedGrade(ues: UE[]): number | null {
+  const totalECTS = ues.reduce((sum, ue) => sum + ue.ects, 0);
+  if (totalECTS === 0) return null;
 
   let projectedSum = 0;
-  let totalWeightedECTS = 0;
+  let hasAnyGrades = false;
 
   for (const ue of ues) {
     const ueGrade = calculateUEGrade(ue, false);
     if (ueGrade === null) continue;
 
-    // Calculate the proportion this UE contributes to the total
-    const ueWeight = (ue.coef / totalECTS) * 20; // Scale to 20-point system
-    projectedSum += ueGrade * (ue.coef / totalECTS);
-    totalWeightedECTS += ue.coef / totalECTS;
+    hasAnyGrades = true;
+    // Scale by ECTS proportion only
+    const ectsWeight = ue.ects / totalECTS;
+    projectedSum += ueGrade * ectsWeight;
   }
 
-  if (totalWeightedECTS === 0) return null;
+  if (!hasAnyGrades) return null;
 
-  // Scale the result to maintain the 20-point system
+  // Round only at the end
   return roundTo(projectedSum, 5);
 }
 
 /**
- * Calculate overall projected grade for all UEs
+ * Calculate final grade when all UEs are completed
+ * Uses ECTS weighting for final calculation
  */
-export function calculateOverallProjectedGrade(ues: UE[], treatEmptyAsZero = false): number | null {
-  const totalECTS = ues.reduce((sum, ue) => sum + ue.coef, 0);
-  
+export function calculateOverallFinalGrade(ues: UE[]): number | null {
+  const totalECTS = ues.reduce((sum, ue) => sum + ue.ects, 0);
   if (totalECTS === 0) return null;
 
-  let projectedSum = 0;
-  let availableECTS = 0;
+  let finalSum = 0;
+  let completedECTS = 0;
 
   for (const ue of ues) {
-    const ueGrade = calculateUEGrade(ue, treatEmptyAsZero);
-    if (ueGrade === null && !treatEmptyAsZero) continue;
+    const ueGrade = calculateUEGrade(ue, true); // Treat empty as zero for final calculation
+    if (ueGrade === null) continue;
 
-    const grade = ueGrade ?? 0;
-    projectedSum += grade * (ue.coef / totalECTS);
-    availableECTS += ue.coef;
+    finalSum += ueGrade * ue.ects;
+    completedECTS += ue.ects;
   }
 
-  if (availableECTS === 0) return null;
+  if (completedECTS === 0) return null;
 
-  return roundTo(projectedSum * (totalECTS / availableECTS), 5);
+  // Round only at the end
+  return roundTo(finalSum / totalECTS, 5);
 }
 
 /**
- * Calculate final grade - same as projected when all grades are entered
+ * Main function to calculate overall grade
+ * For mid-progress: returns projected grade
+ * For complete: returns final grade
  */
 export function calculateOverallGrade(ues: UE[], treatEmptyAsZero = false): number | null {
-  return calculateOverallProjectedGrade(ues, treatEmptyAsZero);
+  if (treatEmptyAsZero) {
+    return calculateOverallFinalGrade(ues);
+  } else {
+    return calculateOverallMidProgressProjectedGrade(ues);
+  }
 }
 
 /**
@@ -124,5 +145,5 @@ export function calculateOverallGrade(ues: UE[], treatEmptyAsZero = false): numb
  */
 export function formatGrade(grade: number | null): string {
   if (grade === null) return 'N/A';
-  return parseFloat(grade.toFixed(5)).toString();
+  return grade.toString();
 }

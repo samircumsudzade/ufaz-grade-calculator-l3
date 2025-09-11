@@ -1,14 +1,14 @@
 import React from 'react';
 import { UE } from '../types/syllabus';
-import { calculateOverallGrade, formatGrade } from '../utils/gradeCalculations';
+import { calculateOverallCurrentGrade, calculateOverallMidProgressProjectedGrade, formatGrade } from '../utils/gradeCalculations';
 
 interface NavbarProps {
   ues: UE[];
 }
 
 export function Navbar({ ues }: NavbarProps) {
-  const currentGrade = calculateOverallGrade(ues, false);
-  const projectedGrade = calculateOverallGrade(ues, true);
+  const currentGrade = calculateOverallCurrentGrade(ues);
+  const projectedGrade = calculateOverallMidProgressProjectedGrade(ues);
 
   const completedAssessments = ues.reduce((sum, ue) => 
     sum + ue.ecs.reduce((ecSum, ec) => 

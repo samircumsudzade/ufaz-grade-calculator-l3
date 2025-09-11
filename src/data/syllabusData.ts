@@ -4,6 +4,7 @@ export const syllabusData: SyllabusData = [
   {
     "UE": "Mathematics 5",
     "ects": 3,
+    "coef": 3,
     "ecs": [
       {
         "name": "Ordinary and partial differential equations",
@@ -19,6 +20,7 @@ export const syllabusData: SyllabusData = [
   {
     "UE": "Physical Chemistry 5",
     "ects": 10,
+    "coef": 10,
     "ecs": [
       {
         "name": "Polymers and formulation",
@@ -53,6 +55,7 @@ export const syllabusData: SyllabusData = [
   {
     "UE": "Chemical engineering 5",
     "ects": 11,
+    "coef": 11,
     "ecs": [
       {
         "name": "Systems dynamics and regulation",
@@ -95,6 +98,7 @@ export const syllabusData: SyllabusData = [
   {
     "UE": "Language 5",
     "ects": 3,
+    "coef": 3,
     "ecs": [
       {
         "name": "English or French",
@@ -110,6 +114,7 @@ export const syllabusData: SyllabusData = [
   {
     "UE": "Professional preparation 2",
     "ects": 3,
+    "coef": 3,
     "ecs": [
       {
         "name": "Scientific writing",
