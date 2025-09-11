@@ -66,17 +66,52 @@ export function calculateOverallGrade(ues: UE[]): number {
 }
 
 /**
- * Calculate remaining ECTS from incomplete UEs
+ * Calculate remaining grade potential from incomplete assessments
+ * Returns the maximum possible grade improvement from remaining assessments
  */
-export function calculateRemainingECTS(ues: UE[]): number {
-  const completedUEs = ues.filter(ue => 
-    ue.ecs.every(ec => 
-      ec.assessments.every(a => a.grade !== undefined && a.grade !== null)
-    )
-  );
-  const completedECTS = completedUEs.reduce((sum, ue) => sum + ue.ects, 0);
-  const totalECTS = ues.reduce((sum, ue) => sum + ue.ects, 0);
-  return totalECTS - completedECTS;
+export function calculateCollectableGrade(ues: UE[]): number {
+  let totalWeightedPotential = 0;
+  let totalECTS = 0;
+
+  for (const ue of ues) {
+    totalECTS += ue.ects;
+    
+    // Calculate potential improvement for this UE
+    let uePotentialImprovement = 0;
+    let totalECCoef = 0;
+    
+    for (const ec of ue.ecs) {
+      totalECCoef += ec.coef;
+      
+      // Calculate potential improvement for this EC
+      let ecPotentialImprovement = 0;
+      let totalAssessmentCoef = 0;
+      
+      for (const assessment of ec.assessments) {
+        totalAssessmentCoef += assessment.coef;
+        const currentGrade = assessment.grade ?? 0;
+        const potentialImprovement = (20 - currentGrade) * assessment.coef;
+        ecPotentialImprovement += potentialImprovement;
+      }
+      
+      if (totalAssessmentCoef > 0) {
+        ecPotentialImprovement = ecPotentialImprovement / totalAssessmentCoef;
+      }
+      
+      uePotentialImprovement += ecPotentialImprovement * ec.coef;
+    }
+    
+    if (totalECCoef > 0) {
+      uePotentialImprovement = uePotentialImprovement / totalECCoef;
+    }
+    
+    totalWeightedPotential += uePotentialImprovement * ue.ects;
+  }
+  
+  if (totalECTS === 0) return 0;
+  
+  // Round only at the end
+  return roundTo(totalWeightedPotential / totalECTS, 5);
 }
 
 /**

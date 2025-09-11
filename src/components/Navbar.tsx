@@ -1,6 +1,6 @@
 import React from 'react';
 import { UE } from '../types/syllabus';
-import { calculateOverallGrade, calculateRemainingECTS, formatGrade } from '../utils/gradeCalculations';
+import { calculateOverallGrade, calculateCollectableGrade, formatGrade } from '../utils/gradeCalculations';
 import { Menu } from './Menu';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
 
 export function Navbar({ ues, onReset }: NavbarProps) {
   const projectedGrade = calculateOverallGrade(ues);
+  const collectableGrade = calculateCollectableGrade(ues);
 
   const completedAssessments = ues.reduce((sum, ue) => 
     sum + ue.ecs.reduce((ecSum, ec) => 
@@ -20,8 +21,6 @@ export function Navbar({ ues, onReset }: NavbarProps) {
     sum + ue.ecs.reduce((ecSum, ec) => ecSum + ec.assessments.length, 0), 0
   );
 
-  // Calculate remaining ECTS
-  const remainingECTS = calculateRemainingECTS(ues);
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
@@ -43,7 +42,7 @@ export function Navbar({ ues, onReset }: NavbarProps) {
               <div className="flex items-center gap-2">
                 <span className="font-medium text-gray-900">{formatGrade(projectedGrade)}/20</span>
                 <span className="text-gray-500">•</span>
-                <span className="text-gray-600">{remainingECTS} collectable</span>
+                <span className="text-gray-600">{formatGrade(collectableGrade)} collectable</span>
               </div>
             </div>
             <div className="w-full bg-gray-100 rounded-md h-2 overflow-hidden">
