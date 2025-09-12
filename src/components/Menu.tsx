@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu as MenuIcon, RotateCcw, Sun, Moon } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { ResetModal } from './ResetModal';
 
 interface MenuProps {
   onReset: () => void;
@@ -8,17 +9,21 @@ interface MenuProps {
 
 export function Menu({ onReset }: MenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const { isDark, toggleDarkMode } = useDarkMode();
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all grades? This action cannot be undone.')) {
-      onReset();
-      setIsOpen(false);
-    }
+    setShowResetModal(true);
+    setIsOpen(false);
+  };
+
+  const handleConfirmReset = () => {
+    onReset();
   };
 
   return (
-    <div className="relative">
+    <>
+      <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -56,6 +61,13 @@ export function Menu({ onReset }: MenuProps) {
           </div>
         </>
       )}
-    </div>
+      </div>
+      
+      <ResetModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleConfirmReset}
+      />
+    </>
   );
 }
