@@ -9,7 +9,7 @@ interface AssessmentRowProps {
 
 export function AssessmentRow({ assessment, onGradeChange }: AssessmentRowProps) {
   return (
-    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-md hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors">
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{assessment.label}</div>
         <div className="flex items-center gap-2 mt-1">
@@ -17,7 +17,7 @@ export function AssessmentRow({ assessment, onGradeChange }: AssessmentRowProps)
             Coef. {assessment.coef}
           </span>
           {assessment.duration && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">{assessment.duration}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-500">{assessment.duration}</span>
           )}
         </div>
       </div>
@@ -26,7 +26,7 @@ export function AssessmentRow({ assessment, onGradeChange }: AssessmentRowProps)
           value={assessment.grade}
           onChange={onGradeChange}
         />
-        <span className="text-sm text-gray-500 dark:text-gray-400">/20</span>
+        <span className="text-sm text-gray-500 dark:text-gray-500">/20</span>
       </div>
     </div>
   );

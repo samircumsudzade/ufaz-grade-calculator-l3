@@ -22,7 +22,7 @@ export function ECCard({ ec, onAssessmentGradeChange }: ECCardProps) {
                 {ec.ects} ECTS
               </span>
             )}
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
               Coef. {ec.coef}
             </span>
           </div>

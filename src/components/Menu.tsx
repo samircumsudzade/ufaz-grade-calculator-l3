@@ -21,10 +21,10 @@ export function Menu({ onReset }: MenuProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Menu"
       >
-        <MenuIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+        <MenuIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
 
       {isOpen && (
@@ -33,21 +33,21 @@ export function Menu({ onReset }: MenuProps) {
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-20">
+          <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-20">
             <div className="py-1">
               <button
                 onClick={() => {
                   toggleDarkMode();
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </button>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset All Grades

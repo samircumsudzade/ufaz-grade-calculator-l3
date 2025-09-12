@@ -12,8 +12,8 @@ export function UESection({ ue, onAssessmentGradeChange }: UESectionProps) {
   const calculatedGrade = calculateUEGrade(ue);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
-      <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{ue.UE}</h3>
@@ -21,7 +21,7 @@ export function UESection({ ue, onAssessmentGradeChange }: UESectionProps) {
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
                 {ue.ects} ECTS
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300">
                 Coef. {ue.coef}
               </span>
             </div>
@@ -35,7 +35,7 @@ export function UESection({ ue, onAssessmentGradeChange }: UESectionProps) {
         </div>
       </div>
       
-      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
         {ue.ecs.map((ec, ecIndex) => (
           <ECCard
             key={ecIndex}
