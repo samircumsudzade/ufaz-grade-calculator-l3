@@ -29,7 +29,7 @@ export function GradeInput({ value, onChange, placeholder = "Grade", className =
       value={value ?? ''}
       onChange={handleChange}
       placeholder={placeholder}
-      className={`w-20 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${className}`}
+      className={`w-20 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${className}`}
     />
   );
 }
