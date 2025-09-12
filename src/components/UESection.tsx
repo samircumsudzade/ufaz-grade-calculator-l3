@@ -12,30 +12,30 @@ export function UESection({ ue, onAssessmentGradeChange }: UESectionProps) {
   const calculatedGrade = calculateUEGrade(ue);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors">
-      <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{ue.UE}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 truncate">{ue.UE}</h3>
             <div className="flex items-center gap-3 mt-1">
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
                 {ue.ects} ECTS
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
                 Coef. {ue.coef}
               </span>
             </div>
           </div>
           <div className="text-right ml-4">
-            <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+            <div className="text-2xl font-semibold text-gray-900">
               {formatGrade(calculatedGrade)}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">out of 20</div>
+            <div className="text-xs text-gray-500">out of 20</div>
           </div>
         </div>
       </div>
       
-      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="divide-y divide-gray-100">
         {ue.ecs.map((ec, ecIndex) => (
           <ECCard
             key={ecIndex}
