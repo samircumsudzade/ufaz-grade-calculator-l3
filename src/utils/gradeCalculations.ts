@@ -66,7 +66,7 @@ export function calculateOverallGrade(ues: UE[]): number {
 }
 
 /**
- * Calculate remaining grade potential from incomplete assessments
+ * Calculate remaining grade potential from assessments that don't have grades yet
  * Returns the maximum possible grade improvement from remaining assessments
  */
 export function calculateCollectableGrade(ues: UE[]): number {
@@ -88,10 +88,13 @@ export function calculateCollectableGrade(ues: UE[]): number {
       let totalAssessmentCoef = 0;
       
       for (const assessment of ec.assessments) {
-        totalAssessmentCoef += assessment.coef;
-        const currentGrade = assessment.grade ?? 0;
-        const potentialImprovement = (20 - currentGrade) * assessment.coef;
-        ecPotentialImprovement += potentialImprovement;
+        // Only count assessments that don't have grades yet
+        if (assessment.grade === undefined) {
+          totalAssessmentCoef += assessment.coef;
+          // Full potential (20 points) for assessments without grades
+          const potentialImprovement = 20 * assessment.coef;
+          ecPotentialImprovement += potentialImprovement;
+        }
       }
       
       if (totalAssessmentCoef > 0) {
