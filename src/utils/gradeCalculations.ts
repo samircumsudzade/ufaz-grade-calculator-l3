@@ -67,54 +67,54 @@ export function calculateOverallGrade(ues: UE[]): number {
 
 /**
  * Calculate remaining grade potential from assessments that don't have grades yet
- * Returns the maximum possible grade improvement from remaining assessments
+ * Returns the maximum possible grade from assessments that haven't been graded yet
  */
 export function calculateCollectableGrade(ues: UE[]): number {
-  let totalWeightedPotential = 0;
+  let totalWeightedCollectable = 0;
   let totalECTS = 0;
 
   for (const ue of ues) {
     totalECTS += ue.ects;
     
-    // Calculate potential improvement for this UE
-    let uePotentialImprovement = 0;
+    // Calculate collectable potential for this UE
+    let ueCollectablePotential = 0;
     let totalECCoef = 0;
     
     for (const ec of ue.ecs) {
       totalECCoef += ec.coef;
       
-      // Calculate potential improvement for this EC
-      let ecPotentialImprovement = 0;
+      // Calculate collectable potential for this EC
+      let ecCollectablePotential = 0;
       let totalAssessmentCoef = 0;
       
       for (const assessment of ec.assessments) {
+        totalAssessmentCoef += assessment.coef;
         // Only count assessments that don't have grades yet
         if (assessment.grade === undefined) {
-          totalAssessmentCoef += assessment.coef;
           // Full potential (20 points) for assessments without grades
-          const potentialImprovement = 20 * assessment.coef;
-          ecPotentialImprovement += potentialImprovement;
+          ecCollectablePotential += 20 * assessment.coef;
         }
+        // If assessment has a grade, its potential is no longer collectable
       }
       
       if (totalAssessmentCoef > 0) {
-        ecPotentialImprovement = ecPotentialImprovement / totalAssessmentCoef;
+        ecCollectablePotential = ecCollectablePotential / totalAssessmentCoef;
       }
       
-      uePotentialImprovement += ecPotentialImprovement * ec.coef;
+      ueCollectablePotential += ecCollectablePotential * ec.coef;
     }
     
     if (totalECCoef > 0) {
-      uePotentialImprovement = uePotentialImprovement / totalECCoef;
+      ueCollectablePotential = ueCollectablePotential / totalECCoef;
     }
     
-    totalWeightedPotential += uePotentialImprovement * ue.ects;
+    totalWeightedCollectable += ueCollectablePotential * ue.ects;
   }
   
   if (totalECTS === 0) return 0;
   
   // Round only at the end
-  return roundTo(totalWeightedPotential / totalECTS, 5);
+  return roundTo(totalWeightedCollectable / totalECTS, 5);
 }
 
 /**
