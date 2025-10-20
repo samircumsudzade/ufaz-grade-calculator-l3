@@ -40,7 +40,8 @@ export const syllabusData: SyllabusData = [
         "name": "Experimental chemistry 5",
         "coef": 1,
         "assessments": [
-          { "label": "Reports/Behavior", "coef": 1 }
+          { "label": "Report", "coef": 0.5 },
+          { "label": "Oral/Behaviour", "coef": 1.5, "duration": "0h20" }
         ]
       },
       {
@@ -68,8 +69,8 @@ export const syllabusData: SyllabusData = [
         "name": "Catalysis and environnement",
         "coef": 2,
         "assessments": [
-          { "label": "4 homeworks", "coef": 2 },
-          { "label": "Written exam", "coef": 3, "duration": "1h30" }
+          { "label": "4 homeworks", "coef": 1 },
+          { "label": "Written exam", "coef": 4, "duration": "1h30" }
         ]
       },
       {
